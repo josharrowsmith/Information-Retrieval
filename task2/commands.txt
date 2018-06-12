@@ -1,0 +1,21 @@
+#run query's Terrier BM25 and TF_IDF
+bin/trec_terrier.sh -r -Dtrec.model=BM25 -c 0.4 -Dtrec.topics=../query1.txt
+bin/trec_terrier.sh -r -Dtrec.model=BM25 -c 0.4 -Dtrec.topics=../query2.txt
+bin/trec_terrier.sh -r -Dtrec.model=BM25 -c 0.4 -Dtrec.topics=../query3.txt
+bin/trec_terrier.sh -r -Dtrec.model=BM25 -c 0.4 -Dtrec.topics=../queryall.txt
+
+bin/trec_terrier.sh -r -Dtrec.model=TF_IDF -c 0.4 -Dtrec.topics=../query1.txt
+bin/trec_terrier.sh -r -Dtrec.model=TF_IDF -c 0.4 -Dtrec.topics=../query2.txt
+bin/trec_terrier.sh -r -Dtrec.model=TF_IDF -c 0.4 -Dtrec.topics=../query3.txt
+bin/trec_terrier.sh -r -Dtrec.model=TF_IDF -c 0.4 -Dtrec.topics=../queryall.txt
+
+#Trec_eval Map, gmap, ndcg.10, P.10
+./trec_eval -m map -q ../trec123.51-200.ap8889.qrels ../query-results/BM25b0.4_7.res
+./trec_eval -m gm_map -q ../trec123.51-200.ap8889.qrels ../query-results/BM25b0.4_7.res
+./trec_eval -m ndcg_cut.10 -q ../trec123.51-200.ap8889.qrels ../query-results/BM25b0.4_7.res
+./trec_eval -m P.10 ../trec123.51-200.ap8889.qrels ../query-results/BM25b0.4_7.res
+
+./trec_eval -m map -q ../trec123.51-200.ap8889.qrels ../query-results/TF_IDF_3.res
+./trec_eval -m gm_map -q ../trec123.51-200.ap8889.qrels ../query-results/TF_IDF_3.res
+./trec_eval -m ndcg_cut.10 -q ../trec123.51-200.ap8889.qrels ../query-results/TF_IDF_3.res
+./trec_eval -m P.10 -q ../trec123.51-200.ap8889.qrels ../query-results/TF_IDF_3.res
