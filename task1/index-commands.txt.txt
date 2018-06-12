@@ -1,0 +1,6 @@
+#Setup
+bin/trec_setup.sh ../AP8889/
+#index it
+bin/trec_terrier.sh -i
+#print information
+bin/trec_terrier.sh --printstats
