@@ -20,6 +20,6 @@ A number of baseline were run
 # Task 3 and 4
 Implement a query expansion technique based on word embeddings, I used the cosine similarity to try and improve my results
 
-![screenshots](./task3/results2.PNG)
+![screenshots](./task3-4/results2.PNG)
 
 # Results
