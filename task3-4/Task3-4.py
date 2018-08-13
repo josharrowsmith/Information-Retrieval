@@ -1,7 +1,8 @@
 
 # coding: utf-8
 
-# In[ ]:
+# In[1]:
+
 
 #Part three attempt 
 from __future__ import absolute_import, division, print_function
@@ -16,7 +17,8 @@ import glob
 import multiprocessing
 
 
-# In[278]:
+# In[2]:
+
 
 #nltk is the best 
 import nltk
@@ -29,18 +31,21 @@ import pandas as pd
 import seaborn as sns
 
 
-# In[279]:
+# In[ ]:
+
 
 data_filenames = sorted(glob.glob("query/queryall.trec"))
 
 
 # In[280]:
 
+
 print("Found all the things:")
 data_filenames
 
 
 # In[281]:
+
 
 nltk.download("stopwords")
 
@@ -57,16 +62,19 @@ for data_filename in data_filenames:
 
 # In[282]:
 
+
 #nltk is life 
 tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
 
 
 # In[283]:
 
+
 raw_data = tokenizer.tokenize(corpus_raw)
 
 
 # In[284]:
+
 
 #Trying to remove all the shit 
 def sentence_to_wordlist(raw):
@@ -77,6 +85,7 @@ def sentence_to_wordlist(raw):
 
 # In[285]:
 
+
 sentences = []
 for raw_sentence in raw_data:
     if len(raw_sentence) > 0:
@@ -85,17 +94,20 @@ for raw_sentence in raw_data:
 
 # In[286]:
 
+
 #kinda working, need to remove top, num etc
 print(sentence_to_wordlist(raw_data[0]))
 
 
 # In[287]:
 
+
 token_count = sum([len(sentence) for sentence in sentences])
 print("The data corpus contains {0:,} tokens of stuff".format(token_count))
 
 
 # In[288]:
+
 
 #features can change for hopefully better results 
 num_features = 300
@@ -115,6 +127,7 @@ seed = 1
 
 # In[293]:
 
+
 data2vec = w2v.Word2Vec(
     sg=1,
     seed=seed,
@@ -128,11 +141,13 @@ data2vec = w2v.Word2Vec(
 
 # In[234]:
 
+
 #Build im so confused
 data2vec.build_vocab(sentences)
 
 
 # In[235]:
+
 
 #well thats wrong 
 print("Word2Vec vocabulary length:", len(data2vec.wv.vocab))
@@ -140,25 +155,30 @@ print("Word2Vec vocabulary length:", len(data2vec.wv.vocab))
 
 # In[245]:
 
+
 data2vec.train(sentences, total_words=token_count, epochs=10)
 
 
 # In[246]:
+
 
 data2vec.save(os.path.join("trained", "data2.w2v"))
 
 
 # In[247]:
 
+
 data2vec = glove2word2vec.Word2Vec.load(os.path.join("trained", "data2.w2v"))
 
 
 # In[305]:
 
+
 print(data2vec.wv.vocab)
 
 
 # In[248]:
+
 
 def nearest_similarity_cosmul(start1, end1, end2):
     similarities = data2vec.most_similar_cosmul(
@@ -172,60 +192,78 @@ def nearest_similarity_cosmul(start1, end1, end2):
 
 # In[254]:
 
+
 data2vec.most_similar("TRADING")
 
 
 # In[256]:
 
+
 # could be used for query expansion 
 nearest_similarity_cosmul("COMPUTER", "CONTROL", "EQUIPMENT")
 
 
-# In[2]:
-
-#Part four 
-# need both query and raw_data
-# raw_data = all the data 
-# need the vectors
-import numpy as np
-
-#get doc id will need to compare later
-def get_doc_id(raw):
-    clean = re.sub("[^1-9]"," ", raw)
-    words = clean.split()
-    return words
-
-#turn all the word into vectors
-vec1 = np.vectorize(raw_data)
-#get doc id 
-vec2 = get_doc_id(raw_data)
-
-#Query Expansion
-#compare terms in the vectors with word embedding in the word vector with the docid, get top k and store it
-scores = []
-
-for term in vec1:
-        ##Compare this terms with words
-        for word in queryTerms:
-            word=word.lower()
-            if word in vectors:
-                termScore += (1 - nearest_similarity_cosmul((vectors[term.lower()], vectors[word]))
-        termQscores.append((term,termScore))
-##similarity:
-termQscores = sorted(termQscores, key=lambda tup: tup[1])
-
-##Add the j best candidate terms to the query.
-for t in scores[0:j]:
-    queryTerms.append(t)
-expandedQueries.append(queryTerms)
+# In[302]:
 
 
-# In[ ]:
+#put different vectors files here
+with open('vectors_ap8889_cbow_s300_w5_neg20_hs0_sam1e-4_iter5.txt', 'r') as myfile:
+    data=myfile.read()
+
+#Split data into list by newlines
+data = re.split('\n', data)
+
+#make it a dictionary for ease of use
+datadict = {}
+for i in range(0,len(data)):
+   data[i] = re.split('\s', data[i])
+   del data[i][-1]
+   datadict[data[i][0]] = data[i]
+   del datadict[data[i][0]][0]
+   
+#numbers ?
+for word in datadict:
+    for k in range(0,len(datadict[word])):
+        datadict[word][k] = float(datadict[word][k])
 
 
+            
+with open('queries.txt', 'r') as myfile:
+    querydata=myfile.read()
+#Split data into 2-D array by spaces
+for i in range(0,len(querydata)):
+    querydata[i] = re.split('\s', querydata[i])
+    #remove all the empties
+    querydata[i] = list(filter(lambda a: a != '', querydata[i]))
+del querydata[0]
 
 
-# In[ ]:
-
-
+for i in range(0,len(querydata)):
+    querybest = ''
+    #we'll only accept query extensions with a similarity above 0
+    querysimil = 0
+    dataminus = dict(datadict)
+    for j in range(0,len(querydata[i])):
+        #can set to lowercase here
+        querydata[i][j] = querydata[i][j].lower()
+        #remove because we don't want to evaluate any terms against terms already
+        #in the query
+        dataminus.pop(querydata[i][j], None)
+    for j in range(0,len(querydata[i])):
+        if querydata[i][j] in datadict:
+            for word in dataminus:
+                topside = 0
+                bottomleft = 0
+                bottomright = 0
+                for k in range(0,len(dataminus[word])):
+                    topside += datadict[querydata[i][j]][k] * dataminus[word][k]
+                    bottomleft += datadict[querydata[i][j]][k] ** 2
+                    bottomright += dataminus[word][k] ** 2
+                cosine = topside / math.sqrt(bottomleft*bottomright)
+                if (cosine > querysimil):
+                    #if cosine similarity is higher, make it the new record
+                    querybest = word
+                    querysimil = cosine
+    print(querybest)
+    querydata[i].append(querybest)
 
